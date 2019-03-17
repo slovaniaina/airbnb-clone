@@ -3,12 +3,16 @@ import React, { Component } from 'react';
 import './App.css';
 import GoogleMapReact from 'google-map-react';
 import Flat from './components/flat'; 
+import Marker from './components/marker';
 
 class App extends Component {
   constructor(props){
     super(props);
     this.state = {
-      flats: []
+      flats: [],
+      allFlats: [],
+      selectedFlat : null,
+      search : ""
     };
   }
 
@@ -21,7 +25,8 @@ class App extends Component {
         //console.log(data);
         this.setState(
           {
-            flats : data
+            flats : data,
+            allFlats : data
           }
         );
       }
@@ -29,43 +34,58 @@ class App extends Component {
 
   }
 
+  selectFlat = (flat) => {
+    console.log(flat);
+    this.setState(
+        {
+            selectedFlat : flat
+        }
+      );
+    //console.log(flat);
+  }
+
+  handleSearch = (event) => {
+    console.log(event.target.value);
+    this.setState({
+        search : event.target.value,
+        flats : this.state.allFlats.filter( flat => flat.name.includes(event.target.value))
+      }
+    );
+  }
+
   render() {
-    // const flat = {
-    //   "id": 148,
-    //   "name": "Trendy Apt in Buttes Montmartre",
-    //   "imageUrl": "https://raw.githubusercontent.com/lewagon/flats-boilerplate/master/images/flat2.jpg",
-    //   "price": 200,
-    //   "priceCurrency": "EUR",
-    //   "lat": 48.885707,
-    //   "lng": 2.343543
-    // };
 
-    // const flats = [flat, flat, flat];
-    // return (
-    //   <div>
-    //     <Flat flat={flat} />
-    //     <Flat flat={flat} />
-    //   </div>
-    // );
-
-    const center = {
+    let center = {
       lat: 48.8566,
       lng: 2.3522
     };
+
+    if(this.state.selectedFlat != null){
+      center = {
+        lat : this.state.selectedFlat.lat,
+        lng : this.state.selectedFlat.lng
+      }
+    }
+
     return (
       <div className = "app">
         <div className = "main">
           <div className = "search">
-
+            <input 
+              type = "text" 
+              placeholder = "Search..."
+              value={this.state.search}
+              onChange={this.handleSearch}
+            />
           </div>
           <div className = "flats">
-            {/* <Flat flat={flat} />
-            <Flat flat={flat} />
-            <Flat flat={flat} />  */}
             {
               this.state.flats.map(
                 (flat) => {
-                  return <Flat flat={flat} />
+                  return <Flat key={flat.id} 
+                  flat={flat} 
+                  selectFlat = {this.selectFlat}
+                  />
                 }
               )
             }
@@ -75,7 +95,21 @@ class App extends Component {
           <GoogleMapReact
             center={center}
             zoom={11}
-          > 
+          >    
+          {
+
+            this.state.flats.map((flat) =>{
+                const priceAndCurrency = `${flat.price} ${flat.priceCurrency}`;
+                return <Marker 
+                key ={flat.id} 
+                lat={flat.lat} 
+                lng={flat.lng} 
+                text ={priceAndCurrency} 
+                selected ={ flat === this.state.selectedFlat }/>
+              }
+
+            )
+          }
           </GoogleMapReact>
         </div>
       </div>
